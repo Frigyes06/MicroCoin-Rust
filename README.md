@@ -1,3 +1,3 @@
-# MicroCoinCore-Rust
+# MicroCoin-Rust
 
-MicroCoinCore rewrite in Rust
+MicroCoin base package rewrite in Rust
