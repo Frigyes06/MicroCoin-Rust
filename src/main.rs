@@ -1,3 +1,6 @@
+use net::client;
+mod net { pub mod client; }
+
 fn main() {
-    println!("Hello, world!");
+    client::Connect("localhost", 9000);
 }

@@ -1,3 +1,3 @@
 # MicroCoin-Rust
 
-[MicroCoin base package](https://github.com/MicroCoinHU/MicroCoin) rewrite in Rust
+MicroCoin node implemention in Rust. Heavily inspired by [MicroCoinCore](https://github.com/MicroCoinHU/MicroCoinCore)
