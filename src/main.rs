@@ -14,6 +14,6 @@ fn main() {
             println!("Logging module failed to initialize!");
         }
     }
-    let success: bool = client::connect("localhost", 9000);
+    let success: bool = client::connect("localhost", 4004);
     println!("{}",success)
 }
