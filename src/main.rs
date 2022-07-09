@@ -1,7 +1,19 @@
-use net::client;
-mod net { pub mod client; }
+use log::{info};
+
+use network::client;
+mod network { pub mod client; }
+use logging::logger;
+mod logging { pub mod logger; }
 
 fn main() {
-    let success = client::Connect("localhost", 9000);
+    match logger::init(){
+        Ok(_result) => {
+            info!("Logging initialized");
+        }
+        Err(_e) => {
+            println!("Logging module failed to initialize!");
+        }
+    }
+    let success: bool = client::connect("localhost", 9000);
     println!("{}",success)
 }
