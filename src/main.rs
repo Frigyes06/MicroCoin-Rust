@@ -1,4 +1,5 @@
 use log::{info};
+use std::fs::File;
 
 use network::client;
 mod network { pub mod client; }
@@ -27,15 +28,17 @@ fn main() {
     let privatekey = exportprivatekey(&new_key);
     println!("{}", privatekey);
     exportpubkey(&new_key);
-    let file = filehandler::openfile("WalletKeys.dat");
+    init_wallet_keys();
 }
 
 fn init_wallet_keys() {
-    let file;
-    match file = filehandler::openfile("WalletKeys.dat"){
-        Ok(file) => file,
+    match filehandler::openfile("WalletKeys.dat"){
+        Ok(result) => {
+            info!("WalletKeys.dat found.");
+        }
         Err(_e) => {
-            filehandler::createfile("WalletKeys.dat");
+            info!("No WalletKey.dat found, creating a new one!");
+            let result = filehandler::createfile("WalletKeys.dat");
         }
     }
 }

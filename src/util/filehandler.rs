@@ -1,9 +1,9 @@
-use std::fs::File;
-use std::io::prelude::*;
+use std::{fs::File, io::Stdout};
+use std::io::{prelude::*, Error};
 use std::path::Path;
 use log::{info, warn};
 
-pub fn openfile(file_name: &str) ->  Result<File, std::io::Error>{
+pub fn openfile(file_name: &str) ->  Result<File, Error>{
     let path = Path::new(file_name);
     let display = path.display();
     let mut file = match File::open(&path) {
@@ -16,6 +16,16 @@ pub fn openfile(file_name: &str) ->  Result<File, std::io::Error>{
     return Ok(file);
 }
 
-pub fn createfile(file_name: &str) -> Result {
-    
+pub fn createfile(file_name: &str) -> Result<File, Error> {
+    let path = Path::new(file_name);
+    let display = path.display();
+
+    // Open a file in write-only mode, returns `io::Result<File>`
+    let mut file = match File::create(&path) {
+        Err(why) => {
+            warn!("couldn't create {}: {}", display, why);
+            return Err(why);
+    }
+        Ok(file) => return Ok(file),
+    };
 }
