@@ -1,6 +1,5 @@
-use openssl::{bn::*, ec::*, nid::Nid, pkey::PKey, sha::Sha256};
-use display_bytes::{display_bytes, HEX_ASCII};
-use openssl_sys::BN_hex2bn;
+use openssl::{bn::*, ec::*, nid::Nid, pkey::PKey, sha::Sha256 };
+use hex::encode;
 
 pub enum eckeytypes {           //enum for keypair types
     SECP256K1 = 714,
@@ -11,11 +10,11 @@ pub enum eckeytypes {           //enum for keypair types
 
 pub fn createnewkeypair() -> EcKey<openssl::pkey::Private> {                            //function for creating new keypairs
     let group: EcGroup = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
-    let keytype = eckeytypes::SECP256K1 as u16;                                    //key type for future implementation 
+    let keytype: u16 = eckeytypes::SECP256K1 as u16;                                    //key type for future implementation 
     let key: EcKey<openssl::pkey::Private> = EcKey::generate(&group).unwrap();          //generates keypair
     let mut ctx: BigNumContext = openssl::bn::BigNumContext::new().unwrap();            //BigNumContext
 
-    let bytes = key.public_key().to_bytes(&group,
+    let bytes: Vec<u8> = key.public_key().to_bytes(&group,
         openssl::ec::PointConversionForm::COMPRESSED, &mut ctx).unwrap();
 
     let public_key: EcPoint = EcPoint::from_bytes(&group, &bytes, &mut ctx).unwrap();
@@ -34,16 +33,22 @@ pub fn exportprivatekey(key: &EcKey<openssl::pkey::Private>) -> String{
 pub fn exportpubkey(key: &EcKey<openssl::pkey::Private>) -> (){                 //Not finished
     let group: EcGroup = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
     let mut ctx: BigNumContext = BigNumContext::new().unwrap();
-    let public_key = key.public_key();
-    let mut x = BigNum::new().unwrap();
-    let mut y = BigNum::new().unwrap();
+    let public_key: &EcPointRef = key.public_key();
+    let mut x: BigNum = BigNum::new().unwrap();
+    let mut y: BigNum = BigNum::new().unwrap();
     public_key
         .affine_coordinates_gfp(group.as_ref(), &mut x, &mut y, &mut ctx)
         .expect("extract coords");
 
-    println!("{}, {}", x, y);
-    let hex_pubkey = format!("01CA02{:x}{}{:x}{}", x.to_hex_str().unwrap().len(), x.to_hex_str().unwrap(), y.to_hex_str().unwrap().len(), y.to_hex_str().unwrap());
+    println!("{}, {}", x.to_hex_str().unwrap(), y.to_hex_str().unwrap());
+
+    let mut sha256: Sha256 = Sha256::new();
+    let data: String = format!("CA02{}{}", x.to_hex_str().unwrap(), y.to_hex_str().unwrap());
+    sha256.update(&data.into_bytes());
+
+    let hex_pubkey: String = format!("01CA02{:04x}{}{:04x}{}{}", x.to_hex_str().unwrap().len(), x.to_hex_str().unwrap(), y.to_hex_str().unwrap().len(), y.to_hex_str().unwrap(), hex::encode(&sha256.finish()[..4]));
+    let bignum_pubkey: BigNum = BigNum::from_hex_str(&hex_pubkey).unwrap();
     println!("{}", hex_pubkey);
-    let encoded = bs58::encode(hex_pubkey).into_string();
+    let encoded: String = bs58::encode(bignum_pubkey.to_vec()).into_string();
     println!("{}", encoded)
 }

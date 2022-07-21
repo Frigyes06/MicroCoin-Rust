@@ -80,6 +80,7 @@ version = "0.1.0"
 dependencies = [
  "bs58",
  "display_bytes",
+ "hex",
  "log",
  "openssl",
  "openssl-sys",
