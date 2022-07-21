@@ -30,25 +30,26 @@ pub fn exportprivatekey(key: &EcKey<openssl::pkey::Private>) -> String{
     return String::from(privatekey);
 }
 
-pub fn exportpubkey(key: &EcKey<openssl::pkey::Private>) -> (){                 //Not finished
+pub fn exportpubkey(key: &EcKey<openssl::pkey::Private>) -> (){
     let group: EcGroup = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
     let mut ctx: BigNumContext = BigNumContext::new().unwrap();
     let public_key: &EcPointRef = key.public_key();
     let mut x: BigNum = BigNum::new().unwrap();
     let mut y: BigNum = BigNum::new().unwrap();
     public_key
-        .affine_coordinates_gfp(group.as_ref(), &mut x, &mut y, &mut ctx)
+        .affine_coordinates_gfp(group.as_ref(), &mut x, &mut y, &mut ctx)   //Extracts coordinates from public key
         .expect("extract coords");
 
-    println!("{}, {}", x.to_hex_str().unwrap(), y.to_hex_str().unwrap());
+    //println!("{}, {}", x.to_hex_str().unwrap(), y.to_hex_str().unwrap());
 
     let mut sha256: Sha256 = Sha256::new();
-    let data: String = format!("CA02{}{}", x.to_hex_str().unwrap(), y.to_hex_str().unwrap());
+    let data: String = format!("CA02{}{}", x.to_hex_str().unwrap(), y.to_hex_str().unwrap());       //sha hash of Curvetype + X + Y
     sha256.update(&data.into_bytes());
 
-    let hex_pubkey: String = format!("01CA02{:04x}{}{:04x}{}{}", x.to_hex_str().unwrap().len(), x.to_hex_str().unwrap(), y.to_hex_str().unwrap().len(), y.to_hex_str().unwrap(), hex::encode(&sha256.finish()[..4]));
+    let hex_pubkey: String = format!("01CA02{:04x}{}{:04x}{}{}", x.to_hex_str().unwrap().len(), x.to_hex_str().unwrap(), y.to_hex_str().unwrap().len(), y.to_hex_str().unwrap(), hex::encode(&sha256.finish()[..4]));   //constructs key according to MCC standard. See wiki
+    
     let bignum_pubkey: BigNum = BigNum::from_hex_str(&hex_pubkey).unwrap();
-    println!("{}", hex_pubkey);
-    let encoded: String = bs58::encode(bignum_pubkey.to_vec()).into_string();
+    //println!("{}", hex_pubkey);
+    let encoded: String = bs58::encode(bignum_pubkey.to_vec()).into_string();       //TODO: Base58 encoding. Using bignum works for now, but it should be replaced with something more elegant
     println!("{}", encoded)
 }
