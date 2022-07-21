@@ -1,8 +1,6 @@
-use openssl::bn::BigNumContext;
-use openssl::ec::*;
-use openssl::nid::Nid;
-use openssl::pkey::PKey;
-use display_bytes::{display_bytes};
+use openssl::{bn::*, ec::*, nid::Nid, pkey::PKey, sha::Sha256};
+use display_bytes::{display_bytes, HEX_ASCII};
+use openssl_sys::BN_hex2bn;
 
 pub enum eckeytypes {           //enum for keypair types
     SECP256K1 = 714,
@@ -35,7 +33,17 @@ pub fn exportprivatekey(key: &EcKey<openssl::pkey::Private>) -> String{
 
 pub fn exportpubkey(key: &EcKey<openssl::pkey::Private>) -> (){                 //Not finished
     let group: EcGroup = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
-    let mut ctx: BigNumContext = openssl::bn::BigNumContext::new().unwrap(); 
-    let bytes = key.public_key().to_bytes(&group,openssl::ec::PointConversionForm::COMPRESSED, &mut ctx).unwrap();
-    println!("{}", display_bytes(&bytes));
+    let mut ctx: BigNumContext = BigNumContext::new().unwrap();
+    let public_key = key.public_key();
+    let mut x = BigNum::new().unwrap();
+    let mut y = BigNum::new().unwrap();
+    public_key
+        .affine_coordinates_gfp(group.as_ref(), &mut x, &mut y, &mut ctx)
+        .expect("extract coords");
+
+    println!("{}, {}", x, y);
+    let hex_pubkey = format!("01CA02{:x}{}{:x}{}", x.to_hex_str().unwrap().len(), x.to_hex_str().unwrap(), y.to_hex_str().unwrap().len(), y.to_hex_str().unwrap());
+    println!("{}", hex_pubkey);
+    let encoded = bs58::encode(hex_pubkey).into_string();
+    println!("{}", encoded)
 }

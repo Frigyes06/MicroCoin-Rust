@@ -1,5 +1,5 @@
 [package]
-name = "micro_coin"
+name = "microcoin"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,3 +11,4 @@ openssl-sys = "0.9"
 openssl = "0.10"
 display_bytes = "0.2.1"
 to-binary = "0.4.0"
+bs58 = "0.4.0"
