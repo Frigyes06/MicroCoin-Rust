@@ -9,3 +9,6 @@ Build and start the project with:
 ```
 cargo run
 ```
+
+# Docs
+[Documentation](https://frigyes06.github.io/MicroCoin-Rust-Docs/)
