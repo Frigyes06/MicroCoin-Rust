@@ -1,10 +1,9 @@
 use openssl::{bn::*, ec::*, nid::Nid, pkey::PKey, sha::Sha256 };
-use hex::encode;
 use hex::FromHex;
-use bincode::{serialize,Options,DefaultOptions};
+use bincode::{serialize,Options};
 use serde_derive::{Serialize, Deserialize};
 
-pub enum eckeytypes {           //enum for keypair types
+pub enum ECKeyTypes {           //enum for keypair types
     SECP256K1 = 714,
     SECP384R1 = 715,
     SECP521R1 = 716,
@@ -12,7 +11,7 @@ pub enum eckeytypes {           //enum for keypair types
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct pubkey_struct {
+struct PubkeyStruct {
     prefix: u8,
     curvetype: u16,
     xlen: [u8;2],
@@ -22,9 +21,18 @@ struct pubkey_struct {
     checksum: [u8;4],
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct ShaHashStruct {
+    curvetype: u16,
+    spearator1: char,
+    x_coord: [u8;32],
+    spearator2: char,
+    y_coord: [u8;32],
+}
+
 pub fn createnewkeypair() -> EcKey<openssl::pkey::Private> {                            //function for creating new keypairs
     let group: EcGroup = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
-    let keytype: u16 = eckeytypes::SECP256K1 as u16;                                    //key type for future implementation 
+    let keytype: u16 = ECKeyTypes::SECP256K1 as u16;                                    //key type for future implementation 
     let key: EcKey<openssl::pkey::Private> = EcKey::generate(&group).unwrap();          //generates keypair
     let mut ctx: BigNumContext = openssl::bn::BigNumContext::new().unwrap();            //BigNumContext
 
@@ -58,23 +66,27 @@ pub fn exportpubkey(key: &EcKey<openssl::pkey::Private>) -> String{
 
     let mut sha256: Sha256 = Sha256::new();
 
+    let data = ShaHashStruct{                                                           //sha hash of Curvetype + X + Y
+        curvetype: ECKeyTypes::SECP256K1 as u16,
+        spearator1: ':',
+        x_coord: x.to_vec().try_into().unwrap(),
+        spearator2: ':',
+        y_coord: y.to_vec().try_into().unwrap(),
+    };
 
-    let data: String = format!("02CA{}{}",x.to_hex_str().unwrap(), y.to_hex_str().unwrap());       //sha hash of Curvetype + X + Y
-    println!("{}", data);
-    sha256.update(&<[u8; 66]>::from_hex(&data).unwrap());
+    sha256.update(&bincode::options().with_fixint_encoding().serialize(&data).unwrap()[..]);
     let sha_hash = sha256.finish();
-    let sha_le = serialize(&sha_hash).unwrap();
 
-    //println!("{:X?}", sha_hash);
+    println!("{:X?}", sha_hash);
     
-    let pubkey = pubkey_struct{
+    let pubkey = PubkeyStruct{
         prefix: 1,
-        curvetype: eckeytypes::SECP256K1 as u16,
+        curvetype: ECKeyTypes::SECP256K1 as u16,
         xlen: [32,0],
         x_coord: x.to_vec().try_into().unwrap(),
         ylen: [32,0],
         y_coord: y.to_vec().try_into().unwrap(),
-        checksum: sha_le[..4].try_into().unwrap(), 
+        checksum: sha_hash[..4].try_into().unwrap(), 
     };
 
     let pubkeyb = bincode::options().with_fixint_encoding().serialize(&pubkey).unwrap();
