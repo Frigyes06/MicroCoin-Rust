@@ -2,6 +2,7 @@ use openssl::{bn::*, ec::*, nid::Nid, pkey::PKey, sha::Sha256 };
 use hex::FromHex;
 use bincode::{serialize,Options};
 use serde_derive::{Serialize, Deserialize};
+use bytestring;
 
 pub enum ECKeyTypes {           //enum for keypair types
     SECP256K1 = 714,
@@ -21,14 +22,6 @@ struct PubkeyStruct {
     checksum: [u8;4],
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct ShaHashStruct {
-    curvetype: u16,
-    spearator1: char,
-    x_coord: [u8;32],
-    spearator2: char,
-    y_coord: [u8;32],
-}
 
 pub fn createnewkeypair() -> EcKey<openssl::pkey::Private> {                            //function for creating new keypairs
     let group: EcGroup = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
@@ -66,16 +59,13 @@ pub fn exportpubkey(key: &EcKey<openssl::pkey::Private>) -> String{
 
     let mut sha256: Sha256 = Sha256::new();
 
-    let data = ShaHashStruct{                                                           //sha hash of Curvetype + X + Y
-        curvetype: ECKeyTypes::SECP256K1 as u16,
-        spearator1: ':',
-        x_coord: x.to_vec().try_into().unwrap(),
-        spearator2: ':',
-        y_coord: y.to_vec().try_into().unwrap(),
-    };
 
-    sha256.update(&bincode::options().with_fixint_encoding().serialize(&data).unwrap()[..]);
-    let sha_hash = sha256.finish();
+    let data: String = format!("714:{}:{}",x.to_hex_str().unwrap(), y.to_hex_str().unwrap());       //sha hash of Curvetype + X + Y
+    println!("{}", data);
+    
+    let bytes: &[u8] = data.as_bytes();
+    sha256.update(bytes);
+    let sha_hash: [u8; 32] = sha256.finish();
 
     println!("{:X?}", sha_hash);
     
