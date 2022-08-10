@@ -13,6 +13,7 @@ use util::filehandler;
 mod util { pub mod filehandler; }
 
 fn main() {
+
     match logger::init(){
         Ok(_result) => {
             info!("Logging initialized");
@@ -21,13 +22,19 @@ fn main() {
             println!("Logging module failed to initialize!");
         }
     }
+
     let success: bool = client::connect("localhost", 4004);
     println!("{}",success);
+    
     let new_key = eckeypair::createnewkeypair();
     println!("private eckey = {:?}", new_key.private_key());
+    
     let privatekey = exportprivatekey(&new_key);
     println!("{}", privatekey);
-    exportpubkey(&new_key);
+    
+    let exported_pubkey = exportpubkey(&new_key);
+    println!("{}", exported_pubkey);
+    
     init_wallet_keys();
 }
 
