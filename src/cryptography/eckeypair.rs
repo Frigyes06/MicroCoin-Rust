@@ -2,7 +2,6 @@ use openssl::{bn::*, ec::*, nid::Nid, pkey::PKey, sha::Sha256 };
 use hex::FromHex;
 use bincode::{serialize,Options};
 use serde_derive::{Serialize, Deserialize};
-use bytestring;
 
 pub enum ECKeyTypes {           //enum for keypair types
     SECP256K1 = 714,
